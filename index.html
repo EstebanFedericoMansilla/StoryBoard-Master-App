@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StoryBoard Master - Crea tus Storyboards de Animación</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            background-color: #f5f6fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.dark-mode {
+            background-color: #181a1b !important;
+            color: #e0e0e0 !important;
+        }
+
+        body.dark-mode .navbar, body.dark-mode .navbar-dark {
+            background-color: #23272b !important;
+        }
+
+        body.dark-mode .tools-panel, body.dark-mode .notes-panel, body.dark-mode .canvas-container, body.dark-mode .frame-container, body.dark-mode .timeline-frame {
+            background: #23272b !important;
+            color: #e0e0e0 !important;
+            box-shadow: 0 0 15px rgba(0,0,0,0.4) !important;
+        }
+
+        body.dark-mode .form-control, body.dark-mode .form-select {
+            background: #23272b !important;
+            color: #e0e0e0 !important;
+            border-color: #444 !important;
+        }
+
+        body.dark-mode .btn-outline-light, body.dark-mode .btn-outline-danger, body.dark-mode .btn-outline-primary, body.dark-mode .btn-outline-warning, body.dark-mode .btn-outline-info {
+            color: #e0e0e0 !important;
+            border-color: #888 !important;
+        }
+
+        body.dark-mode .btn-primary, body.dark-mode .btn-secondary, body.dark-mode .btn-danger, body.dark-mode .btn-success, body.dark-mode .btn-info, body.dark-mode .btn-warning {
+            color: #fff !important;
+        }
+
+        body.dark-mode .timeline-frame.selected {
+            background: #333a4d !important;
+            outline: 3px solid #4a90e2 !important;
+            box-shadow: 0 0 10px #4a90e2bb;
+        }
+
+        body.dark-mode .frame-thumbnail {
+            border-color: #444 !important;
+        }
+
+        body.dark-mode .timeline-frame.selected .frame-thumbnail {
+            border-color: #4a90e2 !important;
+        }
+
+        body.dark-mode .form-label, body.dark-mode label, body.dark-mode .text-secondary {
+            color: #b0b0b0 !important;
+        }
+
+        body.dark-mode .timeline-controls, body.dark-mode .timeline-wrapper {
+            background: #181a1b !important;
+        }
+
+        .canvas-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            padding: 10px;
+            width: 100%;
+            max-width: 100%;
+            height: calc(100vh - 200px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .canvas-container {
+                padding: 5px;
+                margin: 10px 0;
+            }
+            
+            #drawingCanvas {
+                width: 100% !important;
+                height: 100% !important;
+            }
+            
+            .timeline-wrapper {
+                margin-top: 10px;
+                padding: 5px;
+            }
+            
+            .timeline-frame {
+                min-width: 80px !important;
+            }
+        }
+
+        .tools-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        .tools-panel-collapsed {
+            width: 40px !important;
+            min-width: 40px !important;
+            overflow: hidden;
+            transition: width 0.3s;
+        }
+
+        .tools-panel-toggle {
+            position: absolute;
+            top: 10px;
+            right: -18px;
+            z-index: 10;
+            background: #4a90e2;
+            color: #fff;
+            border-radius: 0 5px 5px 0;
+            border: none;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+
+        .color-picker {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .brush-size {
+            width: 100px;
+        }
+
+        .frame-thumbnail {
+            width: 150px;
+            height: 100px;
+            object-fit: cover;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .frame-thumbnail:hover {
+            transform: scale(1.05);
+        }
+
+        .frame-container {
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .notes-panel-wrapper {
+            position: fixed;
+            top: 80px;
+            right: 0;
+            z-index: 1000;
+            transition: transform 0.3s;
+            max-width: 350px;
+        }
+
+        .notes-panel-wrapper.retracted {
+            transform: translateX(95%);
+        }
+
+        .notes-panel {
+            min-width: 300px;
+            max-width: 350px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        #toggleNotesPanel {
+            position: absolute;
+            left: -36px;
+            top: 20px;
+            z-index: 1001;
+            background: #4a90e2;
+            color: #fff;
+            border-radius: 5px 0 0 5px;
+            border: none;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 900px) {
+            .notes-panel-wrapper, .notes-panel {
+                min-width: 180px;
+                max-width: 220px;
+            }
+        }
+
+        .btn-tool {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 5px;
+            border-radius: 5px;
+        }
+
+        .tool-active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .timeline-frame {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .timeline-frame:hover {
+            transform: scale(1.1);
+        }
+
+        #addFrameBtnFixed {
+            position: absolute;
+            left: 50%;
+            top: -60px;
+            transform: translateX(-50%);
+            z-index: 20;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .timeline-wrapper {
+            position: relative;
+            min-height: 80px;
+            margin-top: 60px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fas fa-film"></i> StoryBoard Master</a>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <button id="toggleThemeBtn" class="btn btn-outline-light" title="Cambiar modo claro/oscuro">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <input type="file" id="loadProjectInput" accept=".json" style="display: none;" onchange="loadProject(event)">
+                <button class="btn btn-outline-light me-2" onclick="document.getElementById('loadProjectInput').click()">
+                    <i class="fas fa-folder-open"></i> Cargar Proyecto
+                </button>
+                <button class="btn btn-outline-light me-2" onclick="saveProject()">
+                    <i class="fas fa-save"></i> Guardar Proyecto
+                </button>
+                <button class="btn btn-outline-light" onclick="exportStoryboard()">
+                    <i class="fas fa-file-export"></i> Exportar
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <div class="row">
+            <!-- Panel de Herramientas -->
+            <div class="col-md-2 position-relative">
+                <div id="toolsPanel" class="tools-panel">
+                    <button id="toggleToolsPanel" class="tools-panel-toggle" title="Mostrar/Ocultar panel">
+                        <i class="fas fa-angle-left"></i>
+                    </button>
+                    <h5 class="mb-3">Herramientas</h5>
+                    <div class="d-flex flex-wrap justify-content-center mb-3">
+                        <button class="btn btn-light btn-tool tool-active" onclick="setTool('brush')" title="Lápiz">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                        <button class="btn btn-light btn-tool" onclick="setTool('eraser')" title="Borrador">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                        <button class="btn btn-light btn-tool" onclick="setTool('line')" title="Línea">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button class="btn btn-light btn-tool" onclick="setTool('rectangle')" title="Rectángulo">
+                            <i class="far fa-square"></i>
+                        </button>
+                        <button class="btn btn-light btn-tool" onclick="setTool('circle')" title="Círculo">
+                            <i class="far fa-circle"></i>
+                        </button>
+                        <button class="btn btn-light btn-tool" onclick="setTool('text')" title="Texto">
+                            <i class="fas fa-font"></i>
+                        </button>
+                        <button class="btn btn-light btn-tool" onclick="setTool('fill')" title="Bote de pintura">
+                            <i class="fas fa-fill-drip"></i>
+                        </button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Color</label>
+                        <input type="color" class="color-picker form-control" id="colorPicker" value="#000000">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tamaño del trazo</label>
+                        <input type="range" class="brush-size form-range" id="brushSize" min="1" max="50" value="5">
+                        <small class="text-muted" id="brushSizeValue">5px</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Suavizado del trazo</label>
+                        <input type="range" class="form-range" id="smoothnessSlider" min="2" max="20" value="8">
+                        <small class="text-muted" id="smoothnessValue">8</small>
+                    </div>
+
+                    <button class="btn btn-danger w-100" onclick="clearCanvas()">
+                        <i class="fas fa-trash-alt"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Área de Dibujo -->
+            <div class="col-md-7">
+                <div class="canvas-container">
+                    <button id="fullscreenBtn" class="btn btn-secondary mb-2">
+                        <i class="fas fa-expand"></i> Pantalla completa
+                    </button>
+                    <canvas id="drawingCanvas" width="800" height="600"></canvas>
+                </div>
+                <!-- Controles de animación y audio -->
+                <div class="timeline-controls mt-3 d-flex align-items-center gap-2">
+                    <button id="playBtn" class="btn btn-success"><i class="fas fa-play"></i></button>
+                    <button id="pauseBtn" class="btn btn-warning"><i class="fas fa-pause"></i></button>
+                    <input type="file" id="audioInput" accept="audio/*" style="display:none;">
+                    <button class="btn btn-info" onclick="document.getElementById('audioInput').click()">
+                        <i class="fas fa-music"></i> Cargar audio
+                    </button>
+                    <span id="audioName" class="ms-2 text-secondary"></span>
+                </div>
+                <audio id="audioPlayer" style="display:none;"></audio>
+                <!-- Línea de tiempo de fotogramas -->
+                <div class="timeline-wrapper mt-3 d-flex justify-content-center align-items-end" style="min-height:100px;">
+                    <button id="addFrameBtnFixed" class="btn btn-primary" title="Agregar fotograma">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <div id="timeline" class="timeline d-flex flex-row align-items-end gap-2 justify-content-center w-100" style="margin-left:70px;"></div>
+                </div>
+            </div>
+
+                        <!-- Otros programas recomendados -->
+            <div class="col-12 my-4 d-flex flex-wrap justify-content-center gap-3">
+                <div class="card shadow-sm" style="min-width:220px;max-width:260px;">
+                    <div class="card-body text-center">
+                        <h6 class="card-title mb-2">Trazo Chino</h6>
+                        <p class="card-text small">Programa de animación 2D.</p>
+                        <a href="https://estebanfedericomansilla.github.io/Trazo-Chino/" target="_blank" class="btn btn-outline-primary mb-2">
+                            Visitar Trazo Chino
+                        </a>
+                        <a href="https://estebanfedericomansilla.github.io/Trazo-Chino/" target="_blank" class="btn btn-primary">
+                            Comprar Trazo Chino
+                        </a>
+                    </div>
+                </div>
+                <div class="card shadow-sm" style="min-width:220px;max-width:260px;">
+                    <div class="card-body text-center">
+                        <h6 class="card-title mb-2">Belleza</h6>
+                        <p class="card-text small">Animación 2D open source.</p>
+                        <a href="https://estebanfedericomansilla.github.io/Belleza/" target="_blank" class="btn btn-outline-success mb-2">
+                            Visitar Belleza
+                        </a>
+                        <a href="https://estebanfedericomansilla.github.io/Belleza/" target="_blank" class="btn btn-success">
+                            Descargar Belleza
+                        </a>
+                    </div>
+                </div>
+                <div class="card shadow-sm" style="min-width:220px;max-width:260px;">
+                    <div class="card-body text-center">
+                        <h6 class="card-title mb-2">StoryBoard Master</h6>
+                        <p class="card-text small">Descarga la app para PC o celular.</p>
+                        <a href="#" id="downloadPcBtn" class="btn btn-outline-dark mb-2">
+                            Descargar para PC
+                        </a>
+                        <a href="#" id="downloadMobileBtn" class="btn btn-dark">
+                            Descargar para Celular
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- Panel Lateral Derecho -->
+
+            <!-- Panel Lateral Derecho -->
+            <div class="notes-panel-wrapper" id="notesPanelWrapper">
+                <div id="notesPanel" class="notes-panel">
+                    <button id="toggleNotesPanel" title="Mostrar/Ocultar Notas">
+                        <i class="fas fa-angle-right"></i>
+                    </button>
+                    <h5 class="mb-3">Notas de la Escena</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea id="sceneNotes" class="form-control" rows="3" 
+                            placeholder="Describe la acción de la escena..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Duración (segundos)</label>
+                        <input type="number" id="sceneDuration" class="form-control" value="3" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Transición</label>
+                        <select id="sceneTransition" class="form-select">
+                            <option value="cut">Corte Directo</option>
+                            <option value="fade">Fundido</option>
+                            <option value="dissolve">Disolvencia</option>
+                            <option value="wipe">Barrido</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentTool = 'brush';
+        let isDrawing = false;
+        let startX = 0;
+        let startY = 0;
+        let frames = [];
+        let currentFrame = 0;
+        let undoStack = [];
+        let redoStack = [];
+        let smoothness = 8;
+        let lastPoints = [];
+        let animationInterval = null;
+        let isPlaying = false;
+        let audioLoaded = false;
+
+        // Elementos del DOM
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const colorPicker = document.getElementById('colorPicker');
+        const brushSize = document.getElementById('brushSize');
+        const brushSizeValue = document.getElementById('brushSizeValue');
+        const smoothnessSlider = document.getElementById('smoothnessSlider');
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const audioInput = document.getElementById('audioInput');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const audioName = document.getElementById('audioName');
+        const toggleThemeBtn = document.getElementById('toggleThemeBtn');
+
+        // Configuración inicial
+        function init() {
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            resizeCanvas();
+            addFrame();
+            // Event listeners
+            canvas.removeEventListener('mousedown', startDrawing);
+            canvas.removeEventListener('mousemove', draw);
+            canvas.removeEventListener('mouseup', stopDrawing);
+            canvas.removeEventListener('mouseout', stopDrawing);
+            canvas.addEventListener('pointerdown', function(e) {
+                if (currentTool === 'fill') {
+                    e.preventDefault();
+                    const [x, y] = getPointerPos(canvas, e).map(Math.round);
+                    floodFill(x, y, hexToRgba(colorPicker.value));
+                    saveCurrentFrame();
+                } else {
+                    startDrawing(e);
+                }
+            });
+            canvas.addEventListener('pointermove', draw);
+            canvas.addEventListener('pointerup', stopDrawing);
+            canvas.addEventListener('pointerout', stopDrawing);
+            brushSize.addEventListener('input', () => {
+                brushSizeValue.textContent = brushSize.value + 'px';
+            });
+            smoothnessSlider.addEventListener('input', () => {
+                smoothness = parseInt(smoothnessSlider.value);
+                document.getElementById('smoothnessValue').textContent = smoothness;
+            });
+            document.addEventListener('keydown', handleKeyboard);
+
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            fullscreenBtn.onclick = function() {
+                const canvasContainer = document.querySelector('.canvas-container');
+                if (canvasContainer.requestFullscreen) {
+                    canvasContainer.requestFullscreen();
+                } else if (canvasContainer.webkitRequestFullscreen) {
+                    canvasContainer.webkitRequestFullscreen();
+                } else if (canvasContainer.msRequestFullscreen) {
+                    canvasContainer.msRequestFullscreen();
+                }
+            };
+
+            // Agregar botón para salir de pantalla completa
+            let exitFullscreenBtn = document.createElement('button');
+            exitFullscreenBtn.id = 'exitFullscreenBtn';
+            exitFullscreenBtn.className = 'btn btn-secondary mb-2';
+            exitFullscreenBtn.style.display = 'none';
+            exitFullscreenBtn.innerHTML = '<i class="fas fa-compress"></i> Salir pantalla completa';
+            exitFullscreenBtn.onclick = function() {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            };
+            document.querySelector('.canvas-container').insertBefore(exitFullscreenBtn, document.getElementById('drawingCanvas'));
+
+            // Mostrar/ocultar botón según estado de pantalla completa
+            function onFullscreenChange() {
+                if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+                    exitFullscreenBtn.style.display = '';
+                } else {
+                    exitFullscreenBtn.style.display = 'none';
+                }
+            }
+            document.addEventListener('fullscreenchange', onFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+            document.addEventListener('msfullscreenchange', onFullscreenChange);
+
+            // Evitar scroll al dibujar con tableta
+            canvas.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+            canvas.addEventListener('pointermove', function(e) { if (isDrawing) e.preventDefault(); }, { passive: false });
+            canvas.addEventListener('wheel', function(e) { e.preventDefault(); }, { passive: false });
+
+            playBtn.onclick = playAnimation;
+            pauseBtn.onclick = pauseAnimation;
+
+            audioInput.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const url = URL.createObjectURL(file);
+                audioPlayer.src = url;
+                audioPlayer.load();
+                audioLoaded = true;
+                audioName.textContent = file.name;
+            };
+
+            audioPlayer.onended = function() {
+                isPlaying = false;
+            };
+
+            // Panel retráctil
+            const toolsPanel = document.getElementById('toolsPanel');
+            const toggleToolsPanel = document.getElementById('toggleToolsPanel');
+            toggleToolsPanel.onclick = function() {
+                toolsPanel.classList.toggle('tools-panel-collapsed');
+                const icon = toggleToolsPanel.querySelector('i');
+                if (toolsPanel.classList.contains('tools-panel-collapsed')) {
+                    icon.classList.remove('fa-angle-left');
+                    icon.classList.add('fa-angle-right');
+                } else {
+                    icon.classList.remove('fa-angle-right');
+                    icon.classList.add('fa-angle-left');
+                }
+            };
+
+            const notesPanelWrapper = document.getElementById('notesPanelWrapper');
+            const toggleNotesPanel = document.getElementById('toggleNotesPanel');
+            toggleNotesPanel.onclick = function() {
+                notesPanelWrapper.classList.toggle('retracted');
+                const icon = toggleNotesPanel.querySelector('i');
+                if (notesPanelWrapper.classList.contains('retracted')) {
+                    icon.classList.remove('fa-angle-right');
+                    icon.classList.add('fa-angle-left');
+                } else {
+                    icon.classList.remove('fa-angle-left');
+                    icon.classList.add('fa-angle-right');
+                }
+            };
+
+            document.getElementById('addFrameBtnFixed').onclick = function(e) {
+                e.stopPropagation();
+                addFrame();
+            };
+
+            toggleThemeBtn.onclick = function() {
+                document.body.classList.toggle('dark-mode');
+                const icon = toggleThemeBtn.querySelector('i');
+                if (document.body.classList.contains('dark-mode')) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                } else {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                }
+            };
+        }
+
+        function resizeCanvas() {
+        const canvas = document.getElementById('drawingCanvas');
+        const container = canvas.parentElement;
+        
+        // Mantener relación de aspecto 1:1
+        canvas.width = container.offsetWidth;
+        canvas.height = container.offsetHeight;
+        
+        // Escalar contexto para dispositivos retina
+        const scale = window.devicePixelRatio;
+        canvas.width = canvas.offsetWidth * scale;
+        canvas.height = canvas.offsetHeight * scale;
+        canvas.getContext('2d').scale(scale, scale);
+    }
+
+    // Ejecutar al cargar y al redimensionar
+    window.addEventListener('load', resizeCanvas);
+    window.addEventListener('resize', resizeCanvas);
+        // Funciones de dibujo
+        function startDrawing(e) {
+            e.preventDefault();
+            isDrawing = true;
+            lastPoints = [];
+            const [x, y] = getPointerPos(canvas, e);
+            lastPoints.push({x, y, pressure: e.pressure || 1});
+            startX = x;
+            startY = y;
+            saveState();
+        }
+
+        function draw(e) {
+            e.preventDefault();
+            if (!isDrawing) return;
+            const [x, y] = getPointerPos(canvas, e);
+            const pressure = e.pressure || 1;
+            lastPoints.push({x, y, pressure});
+            if (lastPoints.length > smoothness) lastPoints.shift();
+            ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : colorPicker.value;
+            if (currentTool === 'brush' || currentTool === 'eraser') {
+                if (lastPoints.length > 2) {
+                    ctx.lineJoin = 'round';
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(lastPoints[0].x, lastPoints[0].y);
+                    for (let i = 1; i < lastPoints.length - 2; i++) {
+                        const xc = (lastPoints[i].x + lastPoints[i + 1].x) / 2;
+                        const yc = (lastPoints[i].y + lastPoints[i + 1].y) / 2;
+                        ctx.lineWidth = brushSize.value * (lastPoints[i].pressure || 1);
+                        ctx.quadraticCurveTo(lastPoints[i].x, lastPoints[i].y, xc, yc);
+                    }
+                    ctx.lineWidth = brushSize.value * (lastPoints[lastPoints.length-2].pressure || 1);
+                    ctx.quadraticCurveTo(
+                        lastPoints[lastPoints.length-2].x,
+                        lastPoints[lastPoints.length-2].y,
+                        lastPoints[lastPoints.length-1].x,
+                        lastPoints[lastPoints.length-1].y
+                    );
+                    ctx.stroke();
+                }
+                startX = x;
+                startY = y;
+            } else {
+                if (currentTool === 'line') {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    loadFrame(currentFrame);
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                } else if (currentTool === 'rectangle') {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    loadFrame(currentFrame);
+                    ctx.strokeRect(
+                        Math.min(startX, x),
+                        Math.min(startY, y),
+                        Math.abs(x - startX),
+                        Math.abs(y - startY)
+                    );
+                } else if (currentTool === 'circle') {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    loadFrame(currentFrame);
+                    const radius = Math.sqrt(Math.pow(x - startX, 2) + Math.pow(y - startY, 2));
+                    ctx.beginPath();
+                    ctx.arc(startX, startY, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function stopDrawing(e) {
+            if (e) e.preventDefault();
+            if (!isDrawing) return;
+            isDrawing = false;
+            lastPoints = [];
+            saveCurrentFrame();
+        }
+
+        function getPointerPos(canvas, e) {
+            const rect = canvas.getBoundingClientRect();
+            return [
+                e.clientX - rect.left,
+                e.clientY - rect.top
+            ];
+        }
+
+        // Gestión de frames
+        function addFrame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const frame = {
+                id: frames.length,
+                imageData: ctx.getImageData(0, 0, canvas.width, canvas.height),
+                notes: document.getElementById('sceneNotes').value,
+                duration: document.getElementById('sceneDuration').value,
+                transition: document.getElementById('sceneTransition').value
+            };
+            frames.push(frame);
+            currentFrame = frames.length - 1;
+            updateFramesList();
+            loadFrame(currentFrame);
+        }
+
+        function deleteFrame(index) {
+            frames.splice(index, 1);
+            if (frames.length === 0) {
+                // Si no quedan frames, crear uno nuevo vacío
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const frame = {
+                    id: 0,
+                    imageData: ctx.getImageData(0, 0, canvas.width, canvas.height),
+                    notes: '',
+                    duration: 3,
+                    transition: 'cut'
+                };
+                frames.push(frame);
+                currentFrame = 0;
+            } else {
+                if (currentFrame >= frames.length) {
+                    currentFrame = frames.length - 1;
+                }
+            }
+            updateFramesList();
+            loadFrame(currentFrame);
+        }
+
+        function updateFramesList() {
+            renderTimeline();
+        }
+
+        function renderTimeline() {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = frames.map((frame, index) => `
+                <div class="frame-container timeline-frame ${index === currentFrame ? 'border border-primary' : ''}" style="min-width: 90px;">
+                    <canvas class="frame-thumbnail" width="80" height="60" onclick="selectFrame(${index})"></canvas>
+                    <div class="text-center text-secondary" style="font-size: 0.8em;">
+                        ${frame.duration || 3}s
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger mt-1 w-100" onclick="deleteFrame(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+            // Renderizar miniaturas
+            frames.forEach((frame, index) => {
+                const frameElement = timeline.children[index];
+                if (!frameElement) return;
+                const thumbnail = frameElement.querySelector('.frame-thumbnail');
+                const thumbCtx = thumbnail.getContext('2d');
+                thumbCtx.clearRect(0, 0, thumbnail.width, thumbnail.height);
+                if (frame.imageData) {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = canvas.width;
+                    tempCanvas.height = canvas.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.putImageData(frame.imageData, 0, 0);
+                    thumbCtx.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height, 0, 0, thumbnail.width, thumbnail.height);
+                }
+            });
+        }
+
+        function selectFrame(index) {
+            if (index < 0 || index >= frames.length) return;
+            saveCurrentFrame();
+            currentFrame = index;
+            loadFrame(index);
+            updateFramesList();
+        }
+
+        function saveCurrentFrame() {
+            if (currentFrame >= 0 && currentFrame < frames.length) {
+                frames[currentFrame].imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                frames[currentFrame].notes = document.getElementById('sceneNotes').value;
+                frames[currentFrame].duration = document.getElementById('sceneDuration').value;
+                frames[currentFrame].transition = document.getElementById('sceneTransition').value;
+            }
+        }
+
+        function loadFrame(index) {
+            const frame = frames[index];
+            if (frame && frame.imageData) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.putImageData(frame.imageData, 0, 0);
+            }
+            document.getElementById('sceneNotes').value = frame.notes || '';
+            document.getElementById('sceneDuration').value = frame.duration || 3;
+            document.getElementById('sceneTransition').value = frame.transition || 'cut';
+        }
+
+        // Herramientas
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.btn-tool').forEach(btn => btn.classList.remove('tool-active'));
+            document.querySelector(`[onclick="setTool('${tool}')"]`).classList.add('tool-active');
+            switch(tool) {
+                case 'eraser':
+                    canvas.style.cursor = 'crosshair';
+                    break;
+                case 'text':
+                    canvas.style.cursor = 'text';
+                    break;
+                case 'fill':
+                    canvas.style.cursor = 'cell';
+                    break;
+                default:
+                    canvas.style.cursor = 'crosshair';
+            }
+        }
+
+        function clearCanvas() {
+            if (confirm('¿Estás seguro de que quieres limpiar el canvas?')) {
+                saveState();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // Gestión de estados (Undo/Redo)
+        function saveState() {
+            undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+            redoStack = [];
+        }
+
+        function undo() {
+            if (undoStack.length > 0) {
+                redoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+                const previousState = undoStack.pop();
+                ctx.putImageData(previousState, 0, 0);
+            }
+        }
+
+        function redo() {
+            if (redoStack.length > 0) {
+                undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+                const nextState = redoStack.pop();
+                ctx.putImageData(nextState, 0, 0);
+            }
+        }
+
+        // Atajos de teclado
+        function handleKeyboard(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key.toLowerCase()) {
+                    case 'z':
+                        if (e.shiftKey) {
+                            redo();
+                        } else {
+                            undo();
+                        }
+                        e.preventDefault();
+                        break;
+                    case 's':
+                        saveProject();
+                        e.preventDefault();
+                        break;
+                }
+            } else if (e.key === 'ArrowLeft') {
+                if (currentFrame > 0) {
+                    selectFrame(currentFrame - 1);
+                    e.preventDefault();
+                }
+            } else if (e.key === 'ArrowRight') {
+                if (currentFrame < frames.length - 1) {
+                    selectFrame(currentFrame + 1);
+                    e.preventDefault();
+                }
+            }
+        }
+
+        // Utilidades
+        function getMousePos(canvas, e) {
+            const rect = canvas.getBoundingClientRect();
+            return [
+                e.clientX - rect.left,
+                e.clientY - rect.top
+            ];
+        }
+
+        function getPointerPos(canvas, e) {
+            const rect = canvas.getBoundingClientRect();
+            return [
+                e.clientX - rect.left,
+                e.clientY - rect.top
+            ];
+        }
+
+        function hexToRgba(hex) {
+            const bigint = parseInt(hex.slice(1), 16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+            return [r, g, b, 255];
+        }
+
+        function floodFill(x, y, fillColor) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            const width = imageData.width;
+            const height = imageData.height;
+            const stack = [[x, y]];
+            const offset = (y * width + x) * 4;
+            const startColor = [data[offset], data[offset+1], data[offset+2], data[offset+3]];
+            if (colorsMatch(startColor, fillColor)) return;
+            while (stack.length) {
+                const [cx, cy] = stack.pop();
+                if (cx < 0 || cy < 0 || cx >= width || cy >= height) continue;
+                const idx = (cy * width + cx) * 4;
+                const color = [data[idx], data[idx+1], data[idx+2], data[idx+3]];
+                if (colorsMatch(color, startColor)) {
+                    data[idx] = fillColor[0];
+                    data[idx+1] = fillColor[1];
+                    data[idx+2] = fillColor[2];
+                    data[idx+3] = fillColor[3];
+                    stack.push([cx+1, cy]);
+                    stack.push([cx-1, cy]);
+                    stack.push([cx, cy+1]);
+                    stack.push([cx, cy-1]);
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function colorsMatch(a, b) {
+            return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
+        }
+
+        // Animación y audio
+        function playAnimation() {
+            if (isPlaying || frames.length === 0) return;
+            isPlaying = true;
+            let idx = currentFrame;
+            let audioStarted = false;
+            function nextFrame() {
+                if (!isPlaying) return;
+                selectFrame(idx);
+                if (idx === 0 && audioLoaded && !audioStarted) {
+                    audioPlayer.currentTime = 0;
+                    audioPlayer.play();
+                    audioStarted = true;
+                }
+                let duration = parseFloat(frames[idx].duration) || 3;
+                idx++;
+                if (idx < frames.length) {
+                    animationInterval = setTimeout(nextFrame, duration * 1000);
+                } else {
+                    isPlaying = false;
+                    if (audioLoaded) audioPlayer.pause();
+                }
+            }
+            nextFrame();
+        }
+
+        function pauseAnimation() {
+            isPlaying = false;
+            clearTimeout(animationInterval);
+            if (audioLoaded) audioPlayer.pause();
+        }
+
+        // Guardar y Exportar
+        function saveProject() {
+            saveCurrentFrame();
+            const projectToSave = {
+                frames: frames.map(frame => ({
+                    ...frame,
+                    imageData: frame.imageData ? canvasToBase64(frame.imageData) : null
+                })),
+                currentFrame: currentFrame,
+                version: '1.0'
+            };
+            const blob = new Blob([JSON.stringify(projectToSave)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'storyboard.json';
+            a.click();
+        }
+
+        async function loadProject(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const project = JSON.parse(e.target.result);
+                    if (project.version !== '1.0') {
+                        return alert('Versión de proyecto no compatible.');
+                    }
+                    frames = await Promise.all(project.frames.map(async frame => ({
+                        ...frame,
+                        imageData: frame.imageData ? await base64ToImageData(frame.imageData) : null
+                    })));
+                    currentFrame = project.currentFrame ?? 0;
+                    if (frames.length) {
+                        await loadFrame(currentFrame);
+                        updateFramesList();
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error al cargar el proyecto: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function canvasToBase64(imageData) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = imageData.width;
+            tempCanvas.height = imageData.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.putImageData(imageData, 0, 0);
+            return tempCanvas.toDataURL();
+        }
+
+        function base64ToImageData(base64String) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function() {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = img.width;
+                    tempCanvas.height = img.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.drawImage(img, 0, 0);
+                    const imageData = tempCtx.getImageData(0, 0, img.width, img.height);
+                    resolve(imageData);
+                };
+                img.onerror = function(error) {
+                    console.error('Error al cargar la imagen base64:', error);
+                    reject(new Error('No se pudo convertir la imagen base64 a ImageData.'));
+                };
+                img.src = base64String;
+            });
+        }
+
+        function exportStoryboard() {
+            frames.forEach((frame, index) => {
+                if (!frame.imageData) return;
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.putImageData(frame.imageData, 0, 0);
+                const link = document.createElement('a');
+                link.href = tempCanvas.toDataURL('image/png');
+                link.download = `frame_${index + 1}.png`;
+                link.click();
+            });
+        }
+
+        function resizeCanvas() {
+        const container = document.querySelector('.canvas-container');
+        const containerWidth = container.offsetWidth;
+        const containerHeight = container.offsetHeight;
+        
+        // Mantener relación de aspecto 1:1
+        const size = Math.min(containerWidth, containerHeight);
+        
+        // Ajustar el tamaño del canvas
+        canvas.width = size;
+        canvas.height = size;
+        
+        // Escalar para pantallas Retina
+        const scale = window.devicePixelRatio;
+        canvas.style.width = `${size}px`;
+        canvas.style.height = `${size}px`;
+        canvas.getContext('2d').scale(scale, scale);
+    }
+
+    // Asegúrate de llamar a resizeCanvas en los eventos apropiados
+    window.addEventListener('load', resizeCanvas);
+    window.addEventListener('resize', resizeCanvas);
+
+        init();
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+</html>
