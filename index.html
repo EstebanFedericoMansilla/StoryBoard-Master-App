@@ -562,10 +562,7 @@
             document.addEventListener('webkitfullscreenchange', onFullscreenChange);
             document.addEventListener('msfullscreenchange', onFullscreenChange);
 
-            // Evitar scroll al dibujar con tableta
-            canvas.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
-            canvas.addEventListener('pointermove', function(e) { if (isDrawing) e.preventDefault(); }, { passive: false });
-            canvas.addEventListener('wheel', function(e) { e.preventDefault(); }, { passive: false });
+            // No need for these listeners as we handle touch events separately
 
             playBtn.onclick = playAnimation;
             pauseBtn.onclick = pauseAnimation;
@@ -742,20 +739,20 @@
             
             let clientX, clientY;
             
-            // Manejar eventos táctiles
-            if (e.touches && e.touches.length > 0) {
+            // Handle touch events properly
+            if (e.touches) {
                 clientX = e.touches[0].clientX;
                 clientY = e.touches[0].clientY;
-            } else {
+            } else { // Mouse/pointer events
                 clientX = e.clientX;
                 clientY = e.clientY;
             }
             
-            // Calcular coordenadas precisas considerando el escalado
-            const x = (clientX - rect.left) * scaleX;
-            const y = (clientY - rect.top) * scaleY;
-            
-            return [x, y];
+            // Calculate precise coordinates considering scaling
+            return [
+                (clientX - rect.left) * scaleX,
+                (clientY - rect.top) * scaleY
+            ];
         }
 
         // Funciones para manejo de eventos táctiles
@@ -789,7 +786,9 @@
         function handleTouchMove(e) {
             e.preventDefault();
             if (e.touches.length === 1) {
-                draw(e.touches[0]);
+                const touch = e.touches[0];
+                const [x, y] = getPointerPos(canvas, touch);
+                draw(touch); // Pass the touch object directly
             }
         }
 
