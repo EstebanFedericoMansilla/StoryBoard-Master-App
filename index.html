@@ -643,20 +643,27 @@
             };
         }
 
-        function resizeCanvas() {
-        const canvas = document.getElementById('drawingCanvas');
-        const container = canvas.parentElement;
-        
-        // Mantener relación de aspecto 1:1
-        canvas.width = container.offsetWidth;
-        canvas.height = container.offsetHeight;
-        
-        // Escalar contexto para dispositivos retina
-        const scale = window.devicePixelRatio;
-        canvas.width = canvas.offsetWidth * scale;
-        canvas.height = canvas.offsetHeight * scale;
-        canvas.getContext('2d').scale(scale, scale);
-    }
+        let scaleFactor = window.devicePixelRatio || 1;  
+
+        function resizeCanvas() {  
+        const container = document.querySelector('.canvas-container');  
+        const containerWidth = container.offsetWidth;  
+        const containerHeight = container.offsetHeight;  
+        const size = Math.min(containerWidth, containerHeight);  
+
+        // Ajustar tamaño en píxeles  
+        canvas.width = size * scaleFactor;  
+        canvas.height = size * scaleFactor;  
+
+        // Establecer tamaño estilo para el layout  
+        canvas.style.width = `${size}px`;  
+        canvas.style.height = `${size}px`;  
+
+        // Resetear transformación antes de escalar  
+        const ctx = canvas.getContext('2d');  
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Resetear transformaciones  
+        ctx.scale(scaleFactor, scaleFactor);  
+        }  
 
     // Ejecutar al cargar y al redimensionar
     window.addEventListener('load', resizeCanvas);
