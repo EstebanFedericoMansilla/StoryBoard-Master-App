@@ -749,12 +749,22 @@
 
         function getPointerPos(canvas, e) {
             const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            return [
-                (e.clientX - rect.left) * scaleX,
-                (e.clientY - rect.top) * scaleY
-            ];
+            let x, y;
+            
+            // Handle touch events
+            if (e.touches && e.touches.length > 0) {
+                x = e.touches[0].clientX;
+                y = e.touches[0].clientY;
+            } else {
+                x = e.clientX;
+                y = e.clientY;
+            }
+            
+            // Adjust for canvas position and scale
+            x = (x - rect.left) / (rect.right - rect.left) * canvas.width;
+            y = (y - rect.top) / (rect.bottom - rect.top) * canvas.height;
+            
+            return [x, y];
         }
 
         // Gestión de frames
@@ -944,16 +954,6 @@
             return [
                 e.clientX - rect.left,
                 e.clientY - rect.top
-            ];
-        }
-
-        function getPointerPos(canvas, e) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            return [
-                (e.clientX - rect.left) * scaleX,
-                (e.clientY - rect.top) * scaleY
             ];
         }
 
