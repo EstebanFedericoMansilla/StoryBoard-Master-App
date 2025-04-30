@@ -655,7 +655,7 @@
     window.addEventListener('resize', resizeCanvas);
         // Funciones de dibujo
         function startDrawing(e) {
-            e.preventDefault();
+            if (e.preventDefault) e.preventDefault();
             isDrawing = true;
             lastPoints = [];
             const [x, y] = getPointerPos(canvas, e);
@@ -666,7 +666,7 @@
         }
 
         function draw(e) {
-            e.preventDefault();
+            if (e.preventDefault) e.preventDefault();
             if (!isDrawing) return;
             const [x, y] = getPointerPos(canvas, e);
             const pressure = e.pressure || 1;
@@ -773,22 +773,18 @@
         function handleTouchStart(e) {
             e.preventDefault();
             if (currentTool === 'fill') {
-                const touch = e.touches[0];
-                const [x, y] = getPointerPos(canvas, touch).map(Math.round);
+                const [x, y] = getPointerPos(canvas, e.touches[0]).map(Math.round);
                 floodFill(x, y, hexToRgba(colorPicker.value));
                 saveCurrentFrame();
             } else {
-                const touch = e.touches[0];
-                startDrawing(touch);
+                startDrawing(e);
             }
         }
 
         function handleTouchMove(e) {
             e.preventDefault();
             if (e.touches.length === 1) {
-                const touch = e.touches[0];
-                const [x, y] = getPointerPos(canvas, touch);
-                draw(touch); // Pass the touch object directly
+                draw(e);
             }
         }
 
