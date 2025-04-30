@@ -483,10 +483,6 @@
             resizeCanvas();
             addFrame();
             // Event listeners
-            canvas.removeEventListener('mousedown', startDrawing);
-            canvas.removeEventListener('mousemove', draw);
-            canvas.removeEventListener('mouseup', stopDrawing);
-            canvas.removeEventListener('mouseout', stopDrawing);
             canvas.addEventListener('pointerdown', function(e) {
                 if (currentTool === 'fill') {
                     e.preventDefault();
@@ -500,6 +496,34 @@
             canvas.addEventListener('pointermove', draw);
             canvas.addEventListener('pointerup', stopDrawing);
             canvas.addEventListener('pointerout', stopDrawing);
+
+            // Add touch event listeners
+            canvas.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                if (currentTool === 'fill') {
+                    const touch = e.touches[0];
+                    const [x, y] = getPointerPos(canvas, touch).map(Math.round);
+                    floodFill(x, y, hexToRgba(colorPicker.value));
+                    saveCurrentFrame();
+                } else {
+                    startDrawing(e.touches[0]);
+                }
+            });
+            canvas.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                    draw(e.touches[0]);
+                }
+            });
+            canvas.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                stopDrawing();
+            });
+            canvas.addEventListener('touchcancel', function(e) {
+                e.preventDefault();
+                stopDrawing();
+            });
+
             brushSize.addEventListener('input', () => {
                 brushSizeValue.textContent = brushSize.value + 'px';
             });
