@@ -461,6 +461,7 @@
         let animationInterval = null;
         let isPlaying = false;
         let audioLoaded = false;
+        let copiedFrame = null; // Variable para almacenar el fotograma copiado
 
         // Elementos del DOM
         const canvas = document.getElementById('drawingCanvas');
@@ -795,16 +796,86 @@
 
         // Gestión de frames
         function addFrame() {
+            // Antes de insertar, guarda el estado del fotograma actual
+            saveCurrentFrame();
+
+            // Limpiar canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const frame = {
-                id: frames.length,
+
+            // Crear el nuevo fotograma con datos actuales de notas/duración/transición
+            const newFrame = {
+                id: null, // se asignará después
                 imageData: ctx.getImageData(0, 0, canvas.width, canvas.height),
                 notes: document.getElementById('sceneNotes').value,
                 duration: document.getElementById('sceneDuration').value,
                 transition: document.getElementById('sceneTransition').value
             };
-            frames.push(frame);
-            currentFrame = frames.length - 1;
+
+            // Determinar posición de inserción: justo después del fotograma seleccionado
+            const insertIndex = (currentFrame >= 0 && currentFrame < frames.length)
+                ? currentFrame + 1
+                : frames.length;
+
+            // Insertar en lugar de push
+            frames.splice(insertIndex, 0, newFrame);
+
+            // Reasignar IDs para mantener orden
+            frames.forEach((frame, idx) => {
+                frame.id = idx;
+            });
+
+            // Actualizar puntero al nuevo fotograma
+            currentFrame = insertIndex;
+
+            // Refrescar timeline y pintar el nuevo fotograma
+            updateFramesList();
+            loadFrame(currentFrame);
+        }
+
+        // Funciones de copiar y pegar
+        function copyFrame(index) {
+            if (index >= 0 && index < frames.length) {
+                copiedFrame = {
+                    imageData: frames[index].imageData,
+                    notes: frames[index].notes,
+                    duration: frames[index].duration,
+                    transition: frames[index].transition
+                };
+            }
+        }
+
+        function pasteFrame(index) {
+            if (!copiedFrame) return;
+            
+            // Guardar el estado actual del fotograma
+            saveCurrentFrame();
+
+            // Crear nuevo fotograma basado en el copiado
+            const newFrame = {
+                id: null,
+                imageData: copiedFrame.imageData,
+                notes: copiedFrame.notes,
+                duration: copiedFrame.duration,
+                transition: copiedFrame.transition
+            };
+
+            // Determinar posición de inserción: justo después del fotograma seleccionado
+            const insertIndex = (index >= 0 && index < frames.length)
+                ? index + 1
+                : frames.length;
+
+            // Insertar el nuevo fotograma
+            frames.splice(insertIndex, 0, newFrame);
+
+            // Reasignar IDs para mantener orden
+            frames.forEach((frame, idx) => {
+                frame.id = idx;
+            });
+
+            // Actualizar puntero al nuevo fotograma
+            currentFrame = insertIndex;
+
+            // Refrescar timeline y pintar el nuevo fotograma
             updateFramesList();
             loadFrame(currentFrame);
         }
@@ -844,9 +915,17 @@
                     <div class="text-center text-secondary" style="font-size: 0.8em;">
                         ${frame.duration || 3}s
                     </div>
-                    <button class="btn btn-sm btn-outline-danger mt-1 w-100" onclick="deleteFrame(${index})">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <div class="btn-group w-100">
+                        <button class="btn btn-sm btn-outline-primary" onclick="copyFrame(${index})" title="Copiar fotograma">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-success" onclick="pasteFrame(${index})" title="Pegar fotograma después de este">
+                            <i class="fas fa-paste"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteFrame(${index})" title="Eliminar fotograma">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             `).join('');
             // Renderizar miniaturas
